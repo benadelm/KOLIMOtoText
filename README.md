@@ -1,8 +1,8 @@
 # KOLIMOtoText
 
-A tool created used in the research project [hermA](https://www.herma.uni-hamburg.de/en.html) for extracting the document text of certain TEI and XHTML files in the [KOLIMO](https://kolimo.uni-goettingen.de/index.html) corpus.
+A tool used in the research project [hermA](https://www.herma.uni-hamburg.de/en.html) for extracting the document text of certain TEI and XHTML files in the [KOLIMO](https://kolimo.uni-goettingen.de/index.html) corpus.
 
-The program batch processes all files in a directory, parsing the XML and converting it to plain text taking into account the formatting implications of some TEI and (X)HTML elements as well as a number of mark-up schemes (mainly CSS classes) specific to the TEI and XHTML documents collected in KOLIMO. (See below for a description of how different tags are treated.)
+The program batch processes all files in a directory, parsing the XML and converting it to plain text taking into account the formatting implications of some TEI and (X)HTML elements as well as a number of mark-up schemes (mainly CSS classes) specific to the TEI and XHTML documents collected in KOLIMO. (See *special treatment of tags* below for a description of how different tags are treated.)
 
 # Installation
 
@@ -18,7 +18,7 @@ The program expects three command-line arguments:
 
 All files in the input directory are processed. For every file, the result of the text extraction is written to a file with the same name in the output directory. The extension of the file is not changed, so if the name of the input file is `name.xml`, the output file will also have the name `name.xml` although it is plain text and not XML. You may specify the same directory as input and output directory, but be aware that the input files will be overwritten then.
 
-The tool can only process XML files whose root element is `TEI` or `html`. If another root element is encountered in any file in the input directory, the tool will exit with an error. The same will happen if any file in the input directory is not valid XML (invalid characters, unclosed tags etc.) or if an IO error occurs. Note that in contrast to XHTML files, HTML files may not be valid XML as in HTML certain tags (such as `<br>`) are not required to be closed.
+The tool can only process XML files whose root element is `TEI` or `html`. If another root element is encountered in any file in the input directory, the tool will exit with an error. The same will happen if any file in the input directory is not valid XML (invalid characters, unclosed tags etc.) or if an IO error (e.g. a file cannot be opened) occurs. Note that in contrast to XHTML files, HTML files may not be valid XML as in HTML certain tags (such as `<br>`) are not required to be closed.
 
 The encoding of the plain text output files will be UTF-8 regardless of the encoding given in the XML declaration (`<?xml version="1.0" encoding="..."?>`).
 
@@ -26,6 +26,12 @@ The tool supports two types of conversion:
 
 * `tools` creates an output with only the text content (hopefully suited for further processing by automatic tools).
 * `human` creates an output that is a bit more useful for humans. The main difference is that the absence of images or other non-textual material is indicated by a placeholder string (such as <span lang="de">`[Bild]`</span>).
+
+For example, with the command line options
+
+	kolimo_dir output_dir tools
+
+the files in the directory `kolimo_dir` are read and converted in `tools` mode and the extracted text is saved to files in the directory `output_dir`.
 
 # Conversion Logic
 
@@ -54,7 +60,7 @@ In XHTML only the `head` tag is skipped.
 Other TEI tags with special treatment are:
 
 * `space` is treated like a space character
-* `lb` indicates a line break and normally leads to a line break in the output (see below for exceptions)
+* `lb` indicates a line break and normally leads to a line break in the output (see *hyphenation heuristic* below for exceptions)
 * `pb` indicates a page break and is treated like a line break
 * the contents of `l`, `row` and `item` are surrounded by line breaks
 * if a `div` element has a `type` attribute with value `contents` (`<div type="contents">`), it contains a table of contents and is skipped; otherwise, it is treated like `p`
@@ -69,7 +75,7 @@ Other TEI tags with special treatment are:
 The XHTML tags with special treatment are:
 
 * generally, the contents of HTML block elements (`div`, `p`, `ol`, `ul`, `blockquote`, `h1` to `h6`) are surrounded by one empty line before and after
-* `br` indicates a line break and normally leads to a line break in the output (see below for exceptions)
+* `br` indicates a line break and normally leads to a line break in the output (see *hyphenation heuristic* below for exceptions)
 * a line break is also inserted before the contents of `tr` (table row)
 * `img` indicates an image and cannot be represented in plain text; its contents are skipped, but in `human` conversion mode, <span lang="de">`[Bild]`</span> is inserted as a placeholder
 * if an `a` element has a `class` attribute with value `pageref` (`<a class="pageref">`), it contains a page number and is skipped; otherwise, no special processing takes place
